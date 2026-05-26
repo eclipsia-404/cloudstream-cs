@@ -1,5 +1,4 @@
 name: Build
-
 #Concurrency scoped to the specific branch/ref, not global
 concurrency:
   group: build-${{ github.ref }}
