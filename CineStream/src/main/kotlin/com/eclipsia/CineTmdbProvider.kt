@@ -1,4 +1,4 @@
-package com.megix
+package com.eclipsia
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -8,8 +8,8 @@ import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.megix.CineStreamExtractors.invokeAllSources
-import com.megix.CineStreamExtractors.invokeAnimes
+import com.eclipsia.CineStreamExtractors.invokeAllSources
+import com.eclipsia.CineStreamExtractors.invokeAnimes
 
 class CineTmdbProvider: MainAPI() {
     override var name = "CineTmdb"
