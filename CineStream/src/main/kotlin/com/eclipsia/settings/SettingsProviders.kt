@@ -1,4 +1,4 @@
-package com.megix.settings
+package com.eclipsia.settings
 
 import android.app.AlertDialog
 import android.content.Context
@@ -9,7 +9,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.*
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
-import com.megix.settings.SettingsTheme.dp
+import com.eclipsia.settings.SettingsTheme.dp
 
 /**
  * Builds the "🎬 Providers" collapsible card and each individual provider row.
@@ -34,30 +34,8 @@ internal object SettingsProviders {
         val rows  = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         val order = Settings.getOrder().toMutableList()
 
-        onRegisterCommit {
-            val stremioKeys = Settings.getStremioAddons().map { Settings.stremioAddonKey(it.name) }.toSet()
-            val merged = order
-                .filter { key -> !key.startsWith("stremio_") || key in stremioKeys }
-                .let { filtered -> filtered + (stremioKeys - filtered.toSet()) }
-            Settings.saveOrder(merged)
-            // Mark all currently visible providers as seen so future new additions
-            // are correctly identified and respect the new-provider default preference
-            Settings.markProvidersSeen(merged)
-        }
-
         fun newProviderDefaultOnNow(): Boolean =
             pendingChanges[Settings.NEW_PROVIDER_DEFAULT_ON] as? Boolean ?: Settings.newProviderDefaultOn()
-
-        val seenProviders = Settings.getSeenProviders()
-
-        fun providerEnabled(key: String): Boolean {
-            val explicit = pendingChanges[key] as? Boolean ?: getKey<Boolean>(key)
-            if (explicit != null) return explicit
-            if (key.startsWith("stremio_")) return true
-            if (key in Settings.TORRENT_KEYS) return false
-            if (key !in seenProviders) return newProviderDefaultOnNow()
-            return true
-        }
 
         var searchQuery = ""
 
@@ -78,7 +56,6 @@ internal object SettingsProviders {
                     key            = key,
                     index          = actualIndex + 1,
                     totalCount     = order.size,
-                    isTorrent      = key in Settings.TORRENT_KEYS || Settings.isStremioTorrent(key),
                     canMoveUp      = !isSearching && actualIndex > 0,
                     canMoveDown    = !isSearching && actualIndex < order.lastIndex,
                     pendingChanges = pendingChanges,
@@ -115,8 +92,6 @@ internal object SettingsProviders {
         pillRow.addView(SettingsWidgets.hSpacer(context, 8))
         pillRow.addView(SettingsWidgets.pillBtn(context, "↺ Reset Order", theme.ACCENT_START,
             Color.parseColor("#1A1730"), Color.parseColor("#2E2850")) {
-            val stremioKeys = Settings.getStremioAddons().map { Settings.stremioAddonKey(it.name) }
-            order.clear(); order.addAll(Settings.DEFAULT_ORDER + stremioKeys); rebuild()
             Toast.makeText(context, "Order reset — tap Save to apply", Toast.LENGTH_SHORT).show()
         })
 
@@ -172,7 +147,7 @@ internal object SettingsProviders {
             addView(pillRow)
             addView(newProviderToggleRow)
             addView(TextView(context).apply {
-                text      = "🧲 = off by default  ·  🔌 = Stremio addon  ·  ↑↓ or # = order\n💡 Higher position = loads faster"
+                text      = "Higher position = loads faster"
                 textSize  = 10f
                 setTextColor(Color.parseColor("#44475A"))
                 layoutParams = LinearLayout.LayoutParams(
