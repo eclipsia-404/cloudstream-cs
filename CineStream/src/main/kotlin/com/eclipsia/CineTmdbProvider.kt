@@ -1,4 +1,4 @@
-package com.megix
+package com.eclipsia
 
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -8,8 +8,8 @@ import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.megix.CineStreamExtractors.invokeAllSources
-import com.megix.CineStreamExtractors.invokeAnimes
+import com.eclipsia.CineStreamExtractors.invokeAllSources
+import com.eclipsia.CineStreamExtractors.invokeAnimes
 
 class CineTmdbProvider: MainAPI() {
     override var name = "CineTmdb"
@@ -18,8 +18,6 @@ class CineTmdbProvider: MainAPI() {
         TvType.Movie,
         TvType.TvSeries,
         TvType.Anime,
-        TvType.AsianDrama,
-        TvType.Torrent
     )
     override var lang = "en"
     override val hasMainPage = true
@@ -36,22 +34,12 @@ class CineTmdbProvider: MainAPI() {
         "trending/all/day?api_key=$apiKey&region=US" to "Trending",
         "trending/movie/week?api_key=$apiKey&region=US" to "Popular Movies",
         "trending/tv/week?api_key=$apiKey&region=US" to "Popular TV Shows",
-        "discover/tv?api_key=$apiKey&with_keywords=210024|222243&sort_by=popularity.desc&air_date.lte=${getDate().today}&air_date.gte=${getDate().today}" to "Airing Today Anime",
-        "discover/tv?api_key=$apiKey&with_keywords=210024|222243&sort_by=popularity.desc&air_date.lte=${getDate().nextWeek}&air_date.gte=${getDate().today}" to "On The Air Anime",
-        "discover/tv?api_key=$apiKey&with_original_language=ko" to "Korean Shows",
         "discover/tv?api_key=$apiKey&with_networks=213" to "Netflix",
-        "discover/tv?api_key=$apiKey&with_networks=1024" to "Amazon",
+        "discover/tv?api_key=$apiKey&with_networks=1024" to "Prime Video",
         "discover/tv?api_key=$apiKey&with_networks=2739" to "Disney+",
-        "discover/tv?api_key=$apiKey&with_watch_providers=2336&watch_region=IN" to "JioHotstar",
         "discover/tv?api_key=$apiKey&with_networks=453" to "Hulu",
         "discover/tv?api_key=$apiKey&with_networks=2552" to "Apple TV+",
         "discover/tv?api_key=$apiKey&with_networks=49" to "HBO",
-        "discover/tv?api_key=$apiKey&with_networks=4330" to "Paramount+",
-        "discover/tv?api_key=$apiKey&with_networks=3353" to "Peacock",
-        "discover/movie?api_key=$apiKey&language=en-US&page=1&sort_by=popularity.desc&with_origin_country=IN&release_date.gte=${getDate().lastWeekStart}&release_date.lte=${getDate().today}" to "Trending Indian Movies",
-        "discover/movie?api_key=$apiKey&with_keywords=210024|222243" to "Anime Movies",
-        // "movie/top_rated?api_key=$apiKey&region=US" to "Top Rated Movies",
-        "tv/top_rated?api_key=$apiKey&region=US" to "Top Rated TV Shows",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
