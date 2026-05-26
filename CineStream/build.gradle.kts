@@ -8,22 +8,19 @@ android {
         android.buildFeatures.buildConfig=true
         buildConfigField("String", "SIMKL_API", "\"${properties.getProperty("SIMKL_API")}\"")
         buildConfigField("String", "TMDB_KEY", "\"${properties.getProperty("TMDB_KEY")}\"")
-        buildConfigField("String", "CC_COOKIE", "\"${properties.getProperty("CC_COOKIE")}\"")
     }
 }
 
 cloudstream {
     language = "en"
-    description = "One stop solution for Movies, Series, Anime, AsianDrama and Torrents"
-    authors = listOf("megix")
+    description = "Movies, Series and Anime"
+    authors = listOf("eclipsia")
     status = 1
     tvTypes = listOf(
         "TvSeries",
         "Movie",
-        "AsianDrama",
-        "Anime",
-        "Torrent"
+        "Anime"
     )
 
-    iconUrl = "https://github.com/SaurabhKaperwan/CSX/raw/refs/heads/master/CineStream/icon.png"
+    iconUrl = "https://codeberg.org/eclipsia/eclipsia-cloudstream/raw/branch/main/icons/cs.png"
 }
