@@ -172,7 +172,7 @@ internal object SettingsProviders {
             addView(pillRow)
             addView(newProviderToggleRow)
             addView(TextView(context).apply {
-                text      = "🧲 = off by default  ·  🔌 = Stremio addon  ·  ↑↓ or # = order\n💡 Higher position = loads faster"
+                text      = "Higher position = loads faster"
                 textSize  = 10f
                 setTextColor(Color.parseColor("#44475A"))
                 layoutParams = LinearLayout.LayoutParams(
