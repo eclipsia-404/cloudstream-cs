@@ -28,7 +28,7 @@ open class CineStream: Plugin() {
         }
 
         registerExtractorAPI(SuperVideo())
-        registerExtractorAPI(Akamaicdn())
+
         registerExtractorAPI(HubCloud())
         registerExtractorAPI(VCloud())
         registerExtractorAPI(GDLink())
@@ -44,16 +44,12 @@ open class CineStream: Plugin() {
         registerExtractorAPI(Gofile())
         registerExtractorAPI(Videostr())
         registerExtractorAPI(Streameeeeee())
-        registerExtractorAPI(PpzjYoutube())
+
         registerExtractorAPI(Asianload())
         registerExtractorAPI(Embedload())
         registerExtractorAPI(Cloudnestra())
         registerExtractorAPI(FlixCloud())
-        registerExtractorAPI(VibePlayer())
-        registerExtractorAPI(Playmogo())
-        registerExtractorAPI(Otakuvid())
-        registerExtractorAPI(Otakuhg())
-        registerExtractorAPI(Bysekoze())
+        
 
         this.openSettings = { ctx: Context ->
             Settings.showSettingsDialog(ctx) {
