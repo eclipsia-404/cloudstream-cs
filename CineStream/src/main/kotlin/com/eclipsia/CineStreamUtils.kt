@@ -1,4 +1,4 @@
-package com.megix
+package com.eclipsia
 
 // Cloudstream & NiceHttp
 import com.lagradost.api.Log
@@ -53,7 +53,7 @@ import javax.crypto.spec.SecretKeySpec
 import java.math.BigInteger
 
 // Settings
-import com.megix.settings.Settings
+import com.eclipsia.settings.Settings
 
 
 class SpecOption(searchTerms: List<String>, val label: String) {
@@ -404,18 +404,6 @@ suspend fun getTvdbData(tvType: String, imdbId: String? = null): ExtractedMediaD
     return ExtractedMediaData(castList, posterUrl, backgroundUrl, logoUrl)
 }
 
-fun buildMagnetString(stream: TorrentioStream): String {
-    val trackersString = stream.sources
-        ?.asSequence()
-        ?.filter { it.startsWith("tracker:", ignoreCase = true) }
-        ?.map { it.substringAfter("tracker:").trim() }
-        ?.filter { it.isNotEmpty() }
-        ?.distinct()
-        ?.joinToString("") { "&tr=$it" }
-        ?: ""
-    return "magnet:?xt=urn:btih:${stream.infoHash}&dn=${stream.infoHash}$trackersString&index=${stream.fileIdx}"
-}
-
 fun getFirstCharacterOrZero(input: String): String {
     val firstChar = input[0]
     return if (!firstChar.isLetter()) {
@@ -532,10 +520,6 @@ suspend fun <T> retry(
     }.getOrNull()
 }
 
-fun getKisskhTitle(str: String?): String? {
-    return str?.replace(Regex("[^a-zA-Z\\d]"), "-")
-}
-
 
 suspend fun <A, B> Iterable<A>.safeAmap(
     concurrency: Int = 7,
@@ -606,107 +590,10 @@ fun getIndexQuality(str: String?): Int {
     }
 }
 
-//Dahmer
-fun getIndexQualityTags(str: String?, fullTag: Boolean = false): String {
-    return if (fullTag) Regex("(?i)(.*)\\.(?:mkv|mp4|avi)").find(str ?: "")?.groupValues?.get(1)
-        ?.trim() ?: str ?: "" else Regex("(?i)\\d{3,4}[pP]\\.?(.*?)\\.(mkv|mp4|avi)").find(
-        str ?: ""
-    )?.groupValues?.getOrNull(1)
-        ?.replace(".", " ")?.trim() ?: str ?: ""
-}
-
-suspend fun resolveFinalUrl(startUrl: String): String? {
-    var currentUrl = startUrl
-    var loopCount = 0
-    val maxRedirects = 7
-
-    while (loopCount < maxRedirects) {
-        try {
-            val res = app.head(currentUrl, allowRedirects = false, timeout = 2500L)
-            if (res.code == 200 || res.code in 300..399) {
-                val location = res.headers.get("Location")
-                if(location.isNullOrEmpty()) break
-                currentUrl = location
-            } else {
-                return null
-            }
-            loopCount++
-        } catch (e: Exception) {
-            return null
-        }
-    }
-    return currentUrl
-}
-
-fun String.encodeUrl(): String {
-    val url = URL(this)
-    val uri = URI(url.protocol, url.userInfo, url.host, url.port, url.path, url.query, url.ref)
-    return uri.toURL().toString()
-}
-
-//Hindmoviez
-
-val HindmoviezSECRET = base64Decode("NWU5NjA4NWM1NmUwZjU0ZWRhNjU3NzkwYWM1OGQxOWIyNzE0NzljNTA0MzY3ZmM5ZTZhNmMzM2YxZjgyNGU2Yg==")
-
-fun hindmoviezbase64Url(input: String): String {
-    return base64Encode(input.toByteArray())
-        .replace("+", "-")
-        .replace("/", "_")
-        .replace("=", "")
-}
-
-fun hindmoviezhmacSha256(key: String, data: String): String {
-    val mac = Mac.getInstance("HmacSHA256")
-    val secretKey = SecretKeySpec(key.toByteArray(), "HmacSHA256")
-    mac.init(secretKey)
-    return mac.doFinal(data.toByteArray())
-        .joinToString("") { "%02x".format(it) }
-        .substring(0, 16)
-}
-
-fun hindmoviezsignHShare(rawId: String, domain: String): String {
-    val t = System.currentTimeMillis() / 1000
-    val encoded = hindmoviezbase64Url(rawId)
-    val s = hindmoviezhmacSha256(HindmoviezSECRET, "$encoded|$t")
-    return "$domain/r.php?d=${URLEncoder.encode(encoded, "UTF-8")}&t=$t&s=$s"
-}
-
-suspend fun getHindMoviezLinks(
-    source: String,
-    url: String,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-) {
-    val response = app.get(url)
-    val doc = response.document
-    val name = doc.select("div.container p:contains(Name:)").text().substringAfter("Name: ")
-    val fileSize = doc.select("div.container p:contains(Size:)").text().substringAfter("Size: ")
-    val simplifiedTitle = getSimplifiedTitle(name + fileSize)
-    val link = doc.select("a.btn-info").attr("href")
-    val document = app.get(link, timeout = 30000L).document
-
-    document.select("a.button").safeAmap {
-        val source = it.attr("href")
-
-        callback.invoke(
-            newExtractorLink(
-                "Hindmoviez",
-                "Hindmoviez $simplifiedTitle $fileSize",
-                source,
-                ExtractorLinkType.VIDEO
-            ) {
-                this.quality = getIndexQuality(name)
-            }
-        )
-
-    }
-
-}
-
 //For Extractor new domain
 suspend fun getLatestBaseUrl(baseUrl: String, source: String): String {
     return try {
-        val dynamicUrls = app.get("https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/urls.json")
+        val dynamicUrls = app.get("https://codeberg.org/eclipsia-404/eclipsia/raw/branch/main/urls.json")
             .parsedSafe<Map<String, String>>()
         dynamicUrls?.get(source)?.takeIf { it.isNotBlank() } ?: baseUrl
     } catch (e: Exception) {
@@ -828,14 +715,6 @@ fun fixUrl(url: String, domain: String): String {
         }
         return "$domain/$url"
     }
-}
-
-//Anizip
-fun getEpAnizipId(json: String, ep: Int): Int? {
-    val root = parseJson<Anizip>(json)
-    val episode = root.episodes?.get(ep.toString())
-    val anidbEid = episode?.anidbEid
-    return anidbEid
 }
 
 // --- Converts bytes → readable GB/MB ---
@@ -1106,22 +985,6 @@ suspend fun generateMagnetLink(url: String, hash: String?): String {
     }
 }
 
-//Allanime
-fun decrypthex(inputStr: String): String {
-    val hexString = if (inputStr.startsWith("-")) {
-        inputStr.substringAfterLast("-")
-    } else {
-        inputStr
-    }
-
-    val bytes = ByteArray(hexString.length / 2) { i ->
-        val hexByte = hexString.substring(i * 2, i * 2 + 2)
-        (hexByte.toInt(16) and 0xFF).toByte()
-    }
-
-    return bytes.joinToString("") { (it.toInt() xor 56).toChar().toString() }
-}
-
 suspend fun getM3u8Qualities(
     m3u8Link: String,
     referer: String,
@@ -1144,106 +1007,6 @@ fun fixSourceUrls(url: String, source: String?): String? {
         tryParseJson<AkIframe>(base64Decode(url.substringAfter("=")))?.idUrl
     } else {
         url.replace(" ", "%20")
-    }
-}
-
-fun getGojoId(jsonString: String, title: String): String? {
-
-    val results = JSONObject(jsonString).getJSONArray("results")
-
-    for( i in 0 until results.length() ) {
-        val item = results.getJSONObject(i)
-
-        val titleObject = item.optJSONObject("title") ?: continue
-
-        val englishTitle = titleObject.optString("english", "")
-        val romajiTitle = titleObject.optString("romaji", "")
-
-        if (englishTitle.equals(title, ignoreCase = true) ||
-            romajiTitle.equals(title, ignoreCase = true)) {
-            return item.getString("id")
-        }
-    }
-
-    // for (i in 0 until results.length()) {
-    //     val item = results.getJSONObject(i)
-    //     if (item.optInt("anilist_id") == aniId) {
-    //         return item.getString("id")
-    //     }
-    // }
-
-    return null
-}
-
-fun getGojoServers(jsonString: String): List<String> {
-    val jsonArray = JSONArray(jsonString)
-    val ids = mutableListOf<String>()
-
-    for (i in 0 until jsonArray.length()) {
-        val id = jsonArray.getJSONObject(i).optString("id")
-        if (id.isNotEmpty()) {
-            ids.add(id)
-        }
-    }
-    return ids
-}
-
-suspend fun getGojoStreams(
-    json: String,
-    lang: String,
-    provider: String,
-    gojoBaseAPI: String,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-) {
-    try {
-        val headers = mapOf(
-            "User-Agent" to USER_AGENT,
-            "Referer" to "$gojoBaseAPI/",
-            "Origin" to gojoBaseAPI
-        )
-
-        val jsonObject = JSONObject(json)
-        val serverName = jsonObject.optString("server", "")
-        if(serverName != provider) return
-        val sourcesArray = jsonObject.optJSONArray("sources") ?: return
-
-        for (i in 0 until sourcesArray.length()) {
-            val source = sourcesArray.optJSONObject(i) ?: continue
-            val url = source.optString("url").takeIf { it.isNotEmpty() } ?: continue
-            val videoType = source.optString("type", "m3u8")
-            val quality = source.optString("quality").replace("p", "").toIntOrNull()
-
-            callback.invoke(
-                newExtractorLink(
-                    "Animetsu [${lang.uppercase()}] [${provider.uppercase()}]",
-                    "Animetsu [${lang.uppercase()}] [${provider.uppercase()}]",
-                    fixUrl(url, "https://swiftstream.top/proxy"),
-                    type = if (videoType == "video/mp4") ExtractorLinkType.VIDEO else ExtractorLinkType.M3U8
-                ) {
-                    this.quality = quality ?: Qualities.P1080.value
-                    this.referer = gojoBaseAPI
-                    this.headers = headers
-                }
-            )
-        }
-
-        val subtitles = jsonObject.optJSONArray("subtitles") ?: return
-
-        for (i in 0 until subtitles.length()) {
-            val item = subtitles.optJSONObject(i) ?: continue
-            val url = item.optString("url").takeIf { it.isNotEmpty() } ?: continue
-            val lang = item.optString("lang").takeIf { it.isNotEmpty() } ?: continue
-
-            subtitleCallback.invoke(
-                newSubtitleFile(
-                    getLanguage(lang) ?: lang,
-                    url
-                )
-            )
-        }
-    } catch (e: Exception) {
-        println("Error parsing Gojo streams for $provider [$lang]: ${e.message}")
     }
 }
 
@@ -1298,24 +1061,6 @@ suspend fun getRedirectLinks(url: String): String {
     }
 }
 
-fun decryptVidzeeUrl(encryptedUrl: String, secret: String): String? {
-    return try {
-        val decodedString = base64Decode(encryptedUrl)
-        val parts = decodedString.split(":", limit = 2)
-        if (parts.size < 2) return null
-
-        val iv         = base64DecodeArray(parts[0])
-        val ciphertext = base64DecodeArray(parts[1])
-
-        val key = secret.padEnd(32, '\u0000').toByteArray(Charsets.UTF_8)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
-        String(cipher.doFinal(ciphertext), Charsets.UTF_8)
-    } catch (e: Exception) {
-        null
-    }
-}
-
 fun getVidrockUrlEncode(itemId: String): String {
     val passphrase = "x7k9mPqT2rWvY8zA5bC3nF6hJ2lK4mN9"
     val keyBytes = passphrase.toByteArray(Charsets.UTF_8)
@@ -1325,245 +1070,4 @@ fun getVidrockUrlEncode(itemId: String): String {
     val encryptedBytes = cipher.doFinal(itemId.toByteArray(Charsets.UTF_8))
     val base64Encoded = base64Encode(encryptedBytes)
     return URLEncoder.encode(base64Encoded, "UTF-8").replace("%2F", "/")
-}
-
-//Xpass
-fun extractXpassBackups(html: String): List<Pair<String, String>> {
-    val raw = Regex("""var backups=(\[.*?]);""", RegexOption.DOT_MATCHES_ALL)
-        .find(html)?.groupValues?.get(1) ?: return emptyList()
-    val array = JSONArray(raw)
-    return (0 until array.length()).mapNotNull { i ->
-        val obj  = array.getJSONObject(i)
-        val name = obj.optString("name").takeIf { it.isNotBlank() } ?: return@mapNotNull null
-        val url  = obj.optString("url").takeIf  { it.isNotBlank() } ?: return@mapNotNull null
-        Pair(name, url)
-    }
-}
-
-
-//Mapple
-fun solvePowChallenge(challenge: String, difficulty: Int): String? {
-    val target = BigInteger.ONE.shiftLeft(256 - difficulty)
-    val md = MessageDigest.getInstance("SHA-256")
-
-    var nonce = 0L
-    while (true) {
-        val input = challenge + nonce.toString()
-        val hashBytes = md.digest(input.toByteArray())
-        val hashInt = BigInteger(1, hashBytes)
-
-        if (hashInt < target) {
-            return nonce.toString()
-        }
-
-        nonce++
-        md.reset()
-        if (nonce > 10_000_000) return null
-    }
-}
-
-//Peachify
-fun peachifyDecrypt(encrypt: String): String? {
-    return try {
-        val parts = encrypt.split(".")
-        if (parts.size < 3) return null
-
-        val iv         = b64UrlDecode(parts[0])
-        val cipherData = b64UrlDecode(parts[1]) + b64UrlDecode(parts[2])
-
-        val keyBytes = "d8f2a1b5e9c470814f6b2c3a5d8e7f901a2b3c4d5e3f7a8b9c0d1e2f3a4b5c6d"
-            .chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
-
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(
-            Cipher.DECRYPT_MODE,
-            SecretKeySpec(keyBytes, "AES"),
-            GCMParameterSpec(128, iv)
-        )
-        String(cipher.doFinal(cipherData), Charsets.UTF_8)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
-
-fun b64UrlDecode(s: String): ByteArray {
-    return s.replace('-', '+').replace('_', '/')
-        .let { it + "=".repeat((4 - it.length % 4) % 4) }
-        .let { base64DecodeArray(it) }
-}
-
-//Zinkmovies
-
-fun extractSeasonLinks(content: org.jsoup.nodes.Element, season: Int): List<String> {
-    val links = mutableListOf<String>()
-    var inTargetSeason = false
-    content.children().forEach { child ->
-        when {
-            child.hasClass("lgtagmessage") -> {
-                inTargetSeason = Regex("""Season\s+0*$season\b""", RegexOption.IGNORE_CASE)
-                .containsMatchIn(child.text())
-            }
-            child.hasClass("movie-button-container") && inTargetSeason -> {
-                child.selectFirst("a.movie-simple-button")
-                    ?.attr("href")
-                    ?.takeIf(String::isNotBlank)
-                    ?.let { links.add(it) }
-            }
-        }
-    }
-    return links
-}
-
-suspend fun generateZinkLinks(url: String): List<ZinkLink> {
-    return runCatching {
-
-        val firstDoc = app.get(url).document
-        val title = firstDoc.select("h1.file-title").text()
-        val firstHtml = firstDoc.html()
-
-        val randomId = Regex("""generateDownloadLink\(['"]([^'"]+)""")
-            .find(firstHtml)
-            ?.groupValues
-            ?.getOrNull(1)
-            ?: return emptyList()
-
-        val ajaxEndpoint = Regex("""https://[^"'\\s]+ajax_generate_token\.php""")
-            .find(firstHtml)
-            ?.value
-            ?: return emptyList()
-
-        val downloadBase = Regex("""https://[^"'\\s]+/dl/""")
-            .find(firstHtml)
-            ?.value
-            ?: return emptyList()
-
-        val token = retry  { app.post(
-            url = "$ajaxEndpoint?random_id=$randomId",
-            data = mapOf(
-                "random_id" to randomId
-            ),
-            headers = mapOf(
-                "X-Requested-With" to "XMLHttpRequest"
-            )
-        ).parsedSafe<ZinkTokenResponse>()
-            ?.token
-
-        } ?: return emptyList()
-
-        val generatedUrl = downloadBase + token
-
-        val generatedDoc = app.get(generatedUrl).document
-
-        val results = generatedDoc
-            .select("#mirror-buttons a[href]")
-            .mapNotNull { element ->
-
-                val href = element.attr("href").trim()
-
-                if (href.isBlank()) return@mapNotNull null
-
-                ZinkLink(
-                    name = element.text()
-                        .replace("Generate", "", true)
-                        .trim(),
-                    url = href,
-                    title = title,
-                )
-            }
-            .toMutableList()
-
-        generatedDoc.selectFirst("#worker-btn")?.let { btn: Element ->
-
-            val workerId = Regex("""handleServerRequest\(['"]worker['"]\s*,\s*['"]([^'"]+)""")
-                .find(btn.attr("onclick"))
-                ?.groupValues
-                ?.getOrNull(1)
-
-            val serverHandler = Regex("""SERVER_HANDLER_URL\s*=\s*["']([^"']+)""")
-                .find(generatedDoc.html())
-                ?.groupValues
-                ?.getOrNull(1)
-
-            if (
-                !workerId.isNullOrBlank() &&
-                !serverHandler.isNullOrBlank()
-            ) {
-
-                runCatching {
-
-                    val workerJson = JSONObject(
-                        app.post(
-                            url = serverHandler,
-                            requestBody = """
-                                {
-                                    "server":"worker",
-                                    "random_id":"$workerId"
-                                }
-                            """.trimIndent().toRequestBody(),
-                            headers = mapOf(
-                                "X-Requested-With" to "XMLHttpRequest",
-                                "Content-Type" to "application/json",
-                                "Origin" to generatedUrl.substringBefore("/dl/"),
-                                "Referer" to generatedUrl
-                            )
-                        ).text
-                    )
-
-                    workerJson.optString("url")
-                        .ifBlank {
-                            workerJson.optString("download")
-                        }
-                        .takeIf { it.isNotBlank() }
-                        ?.let {
-                            results += ZinkLink(
-                                name = "WORKER",
-                                url = it,
-                                title = title,
-                            )
-                        }
-
-                }
-            }
-        }
-
-        results.distinctBy { it.url }
-
-    }.getOrElse {
-        emptyList()
-    }
-}
-
-
-suspend fun getZinkLinks(
-    source: String,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-) {
-    generateZinkLinks(source).safeAmap { link ->
-
-        val simplifiedTitle = getSimplifiedTitle(link.title)
-
-        if (link.name.contains("worker", true)) {
-            callback(
-                newExtractorLink(
-                    source = "Zinkmovies Worker",
-                    name = "Zinkmovies Worker $simplifiedTitle",
-                    url = link.url
-                ) {
-                    this.quality = getIndexQuality(link.title)
-                }
-            )
-        } else {
-            loadSourceNameExtractor(
-                "Zinkmovies",
-                link.url,
-                "",
-                subtitleCallback,
-                callback
-            )
-        }
-    }
 }
