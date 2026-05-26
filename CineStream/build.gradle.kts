@@ -14,8 +14,8 @@ android {
 
 cloudstream {
     language = "en"
-    description = "One stop solution for Movies, Series, Anime, AsianDrama and Torrents"
-    authors = listOf("megix")
+    description = "One stop solution for Movies, Series and Anime"
+    authors = listOf("eclipsia")
     status = 1
     tvTypes = listOf(
         "TvSeries",
@@ -25,5 +25,5 @@ cloudstream {
         "Torrent"
     )
 
-    iconUrl = "https://github.com/SaurabhKaperwan/CSX/raw/refs/heads/master/CineStream/icon.png"
+    iconUrl = "https://codeberg.org/eclipsia/eclipsia-cloudstream/raw/branch/main/icons/cs.png"
 }
