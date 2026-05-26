@@ -23,10 +23,6 @@ open class CineStream: Plugin() {
             registerMainAPI(CineStreamProvider())
         }
 
-        if (getKey<Boolean>(Settings.PROVIDER_SIMKL) ?: true) {
-            registerMainAPI(CineSimklProvider())
-        }
-
         if (getKey<Boolean>(Settings.PROVIDER_TMDB) ?: true) {
             registerMainAPI(CineTmdbProvider())
         }
