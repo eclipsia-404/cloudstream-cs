@@ -1,4 +1,4 @@
-package com.megix.settings
+package com.eclipsia.settings
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -17,88 +17,8 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.webkit.*
 import android.widget.*
-import com.megix.settings.SettingsTheme.dp
+import com.eclipsia.settings.SettingsTheme.dp
 
-
-//WebView login dialog for extracting authentication tokens.
-@SuppressLint("SetJavaScriptEnabled")
-internal object SettingsWebView {
-
-    private const val TAG = "CineStreamAuth"
-
-    enum class LoginType { SHOWBOX, GRAMCINEMA }
-
-    private data class Config(
-        val title: String,
-        val startUrl: String,
-        val accentColor: Int,
-        val accentColorB: Int,
-        val tokenLabel: String,
-        val tokenCookieName: String,
-        val extractJs: String
-    )
-
-    private fun configFor(type: LoginType) = when (type) {
-        LoginType.SHOWBOX -> Config(
-            "Login to Febbox", "https://www.febbox.com/",
-            Color.parseColor("#F59E0B"), Color.parseColor("#D97706"),
-            "UI Token", "ui",
-            "(()=>{let m=document.cookie.match(/(?:^|;\\s*)ui=([^;]*)/);return m?decodeURIComponent(m[1]):''})()"
-        )
-        LoginType.GRAMCINEMA -> Config(
-            "Login to GramCinema", "https://bollywood.eu.org/",
-            Color.parseColor("#F472B6"), Color.parseColor("#EC4899"),
-            "Bearer Token", "bearer_token",
-            "(()=>{const isReal=t=>t&&t.startsWith('eyJ0eXAiOi')&&!t.includes(' ');for(let k of ['token','bearer_token','access_token','auth_token','jwt','bearerToken','authToken','user_token','userToken','accessToken','authAccessToken']){let t=localStorage.getItem(k)||sessionStorage.getItem(k);if(isReal(t)){console.log('Found real token via key: '+k);return t;}}for(let i=0;i<localStorage.length;i++){let v=(localStorage.getItem(localStorage.key(i))||'').replace(/^Bearer\\s+/i,'').replace(/[\"']/g,'').trim();if(isReal(v)){console.log('Found real token hidden in storage!');return v;}}return '';})()"
-        )
-    }
-
-    private const val SPOOF_JS = "if(!window.__csxSpoofed){window.__csxSpoofed=!0;let ua='Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Mobile Safari/537.36';try{Object.defineProperty(navigator,'userAgent',{get:()=>ua});Object.defineProperty(navigator,'appVersion',{get:()=>ua.replace('Mozilla/','')})}catch(e){}if(!window.chrome)window.chrome={runtime:{},loadTimes:()=>{},csi:()=>{}}}"
-
-    private const val GRAMCINEMA_INTERCEPT_JS = "if(!window.__csxTokenHooked){window.__csxTokenHooked=!0;const isReal=s=>s&&s.startsWith('eyJ0eXAiOi')&&!s.includes(' ');let _set=XMLHttpRequest.prototype.setRequestHeader;XMLHttpRequest.prototype.setRequestHeader=function(n,v){if(n.toLowerCase()==='authorization'){let t=v.replace(/^Bearer\\s+/i,'').trim();if(isReal(t)){console.log('Intercepted real XHR token!');try{Android.onToken(t)}catch(e){}}}return _set.apply(this,arguments)};let _f=window.fetch;if(_f)window.fetch=function(u,i){try{if(i&&i.headers){let h=i.headers,a=typeof h.get==='function'?h.get('Authorization'):(h.Authorization||h.authorization||'');if(a){let t=a.replace(/^Bearer\\s+/i,'').trim();if(isReal(t)){console.log('Intercepted real Fetch token!');Android.onToken(t)}}}}catch(e){}return _f.apply(this,arguments)}}"
-
-    private class TokenBridge(private val deliver: (String) -> Unit) {
-        @JavascriptInterface
-        fun onToken(value: String) {
-            Log.d(TAG, "Native Bridge received token from JS! Length: ${value.length}")
-            deliver(value)
-        }
-    }
-
-    fun show(context: Context, type: LoginType, onToken: (String) -> Unit) {
-        val cfg = configFor(type)
-        val theme = SettingsTheme
-        val mainHandler = Handler(Looper.getMainLooper())
-
-        var tokenCaptured = false
-        var currentUrl = cfg.startUrl
-        var dialogRef: Dialog? = null
-
-        fun deliver(raw: String) {
-            if (tokenCaptured) return
-            val token = raw.trim().removeSurrounding("\"").trim()
-            if (token.isBlank() || token == "null") return
-
-            tokenCaptured = true
-            Log.i(TAG, "SUCCESS! Token captured for ${type.name}.")
-
-            mainHandler.post {
-                onToken(token)
-                Toast.makeText(context, "✓ ${cfg.tokenLabel} captured — tap outer Save to apply", Toast.LENGTH_SHORT).show()
-                dialogRef?.dismiss()
-            }
-        }
-
-        val progressBar = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 3.dp(context))
-            progressTintList = android.content.res.ColorStateList.valueOf(cfg.accentColor)
-            max = 100; progress = 10
-        }
-
-        val statusText = TextView(context).apply {
-            text = cfg.startUrl; textSize = 10f; setTextColor(theme.TEXT_SECONDARY); setSingleLine(true)
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
 
         // FRAME LAYOUT CONTAINER: Allows us to stack popup WebViews on top of the main one
         val webViewContainer = FrameLayout(context).apply {
