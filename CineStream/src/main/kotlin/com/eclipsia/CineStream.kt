@@ -1,11 +1,11 @@
-package com.megix
+package com.eclipsia
 
 import android.content.Context
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin
-import com.megix.settings.Settings
+import com.eclipsia.settings.Settings
 import kotlinx.coroutines.runBlocking
 
 @CloudstreamPlugin
@@ -23,16 +23,10 @@ open class CineStream: Plugin() {
             registerMainAPI(CineStreamProvider())
         }
 
-        if (getKey<Boolean>(Settings.PROVIDER_SIMKL) ?: true) {
-            registerMainAPI(CineSimklProvider())
-        }
-
         if (getKey<Boolean>(Settings.PROVIDER_TMDB) ?: true) {
             registerMainAPI(CineTmdbProvider())
         }
 
-        registerExtractorAPI(Kwik())
-        registerExtractorAPI(Pahe())
         registerExtractorAPI(SuperVideo())
         registerExtractorAPI(Akamaicdn())
         registerExtractorAPI(HubCloud())
@@ -47,8 +41,6 @@ open class CineStream: Plugin() {
         registerExtractorAPI(Hubdrive())
         registerExtractorAPI(Driveseed())
         registerExtractorAPI(Driveleech())
-        registerExtractorAPI(Howblogs())
-        registerExtractorAPI(Wootly())
         registerExtractorAPI(Gofile())
         registerExtractorAPI(Videostr())
         registerExtractorAPI(Streameeeeee())
@@ -61,7 +53,6 @@ open class CineStream: Plugin() {
         registerExtractorAPI(Playmogo())
         registerExtractorAPI(Otakuvid())
         registerExtractorAPI(Otakuhg())
-        registerExtractorAPI(Allanimeups())
         registerExtractorAPI(Bysekoze())
 
         this.openSettings = { ctx: Context ->
