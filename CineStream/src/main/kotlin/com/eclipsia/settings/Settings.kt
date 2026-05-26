@@ -1,9 +1,9 @@
-package com.megix.settings
+package com.eclipsia.settings
 
 import android.content.Context
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.getKey
 import com.lagradost.cloudstream3.CloudStreamApp.Companion.setKey
-import com.megix.ProviderRegistry
+import com.eclipsia.ProviderRegistry
 
 object Settings {
 
@@ -13,10 +13,6 @@ object Settings {
     const val PROVIDER_CINESTREAM      = "ProviderCineStream"
     const val PROVIDER_SIMKL           = "ProviderSimkl"
     const val PROVIDER_TMDB            = "ProviderTmdb"
-    const val SHOWBOX_TOKEN_KEY        = "showbox_ui_token"
-    const val WYZIE_SUBS_KEY           = "wyzie_subs_api_key"
-    const val GRAMCINEMA_TOKEN_KEY     = "gramcinema_bearer_token"
-    const val STREMIO_ADDONS_KEY       = "stremio_addons"
     const val NEW_PROVIDER_DEFAULT_ON  = "new_provider_default_on"
 
     private const val SEEN_PROVIDERS_KEY = "seen_providers"
@@ -112,75 +108,6 @@ object Settings {
 
     fun saveOrder(order: List<String>) =
         setKey(PROVIDER_ORDER_KEY, order.joinToString(","))
-
-    // ── Stremio addon helpers ────────────────────────────────
-
-    enum class AddonType { HTTPS, TORRENT, DEBRID, SUBTITLE }
-
-    data class StremioAddon(val name: String, val url: String, val type: AddonType)
-
-    fun stremioAddonKey(name: String): String =
-        "stremio_${name.trim().lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')}"
-
-    fun providerDisplayName(key: String): String {
-        PROVIDER_NAMES[key]?.let { return it }
-        if (key.startsWith("stremio_")) {
-            val addon = getStremioAddons().firstOrNull { stremioAddonKey(it.name) == key }
-            if (addon != null) {
-                val icon = when (addon.type) {
-                    AddonType.TORRENT  -> "🧲"
-                    AddonType.DEBRID   -> "☁️"
-                    AddonType.SUBTITLE -> "📝"
-                    AddonType.HTTPS    -> "🔌"
-                }
-                return "$icon ${addon.name}"
-            }
-            return "🔌 " + key.removePrefix("stremio_").replace("_", " ")
-                .replaceFirstChar { it.uppercaseChar() }
-        }
-        return key
-    }
-
-    fun isStremioTorrent(key: String): Boolean {
-        if (!key.startsWith("stremio_")) return false
-        return getStremioAddons().firstOrNull { stremioAddonKey(it.name) == key }
-            ?.type == AddonType.TORRENT
-    }
-
-    fun getStremioAddons(): MutableList<StremioAddon> {
-        val raw = getKey<String>(STREMIO_ADDONS_KEY) ?: return mutableListOf()
-        return raw.lines().filter { it.isNotBlank() }.mapNotNull { line ->
-            val parts = line.split("|")
-            if (parts.size < 3) return@mapNotNull null
-            val type = runCatching { AddonType.valueOf(parts[2]) }.getOrDefault(AddonType.HTTPS)
-            StremioAddon(name = parts[0], url = parts[1], type = type)
-        }.toMutableList()
-    }
-
-    fun saveStremioAddons(addons: List<StremioAddon>) {
-        if (addons.isEmpty()) setKey(STREMIO_ADDONS_KEY, null as String?)
-        else setKey(STREMIO_ADDONS_KEY, addons.joinToString("\n") { "${it.name}|${it.url}|${it.type}" })
-        val validKeys = addons.map { stremioAddonKey(it.name) }.toSet()
-        val current   = getKey<String>(PROVIDER_ORDER_KEY)
-            ?.split(",")?.filter { it.isNotBlank() } ?: return
-        val pruned = current.filter { !it.startsWith("stremio_") || it in validKeys }
-        if (pruned.size != current.size) saveOrder(pruned)
-    }
-
-    // ── ShowBox token helpers ────────────────────────────────
-    fun saveShowboxToken(token: String) = setKey(SHOWBOX_TOKEN_KEY, token.trim())
-    fun getShowboxToken(): String?       = getKey<String>(SHOWBOX_TOKEN_KEY)?.takeIf { it.isNotBlank() }
-    fun clearShowboxToken()              = setKey(SHOWBOX_TOKEN_KEY, null)
-
-    // ── Wyzie Subs API key helpers ───────────────────────────
-    fun saveWyzieSubsKey(key: String) = setKey(WYZIE_SUBS_KEY, key.trim())
-    fun getWyzieSubsKey(): String?     = getKey<String>(WYZIE_SUBS_KEY)?.takeIf { it.isNotBlank() }
-    fun clearWyzieSubsKey()            = setKey(WYZIE_SUBS_KEY, null)
-
-    // ── GramCinema bearer token helpers ──────────────────────
-    fun saveGramCinemaToken(token: String) = setKey(GRAMCINEMA_TOKEN_KEY, token.trim())
-    fun getGramCinemaToken(): String?       = getKey<String>(GRAMCINEMA_TOKEN_KEY)?.takeIf { it.isNotBlank() }
-    fun clearGramCinemaToken()              = setKey(GRAMCINEMA_TOKEN_KEY, null)
 
     // ── Entry point ──────────────────────────────────────────
     fun showSettingsDialog(context: Context, onSave: () -> Unit) =
