@@ -6,6 +6,7 @@ import org.json.JSONObject
 
 // ── 1. Static APIs ──────────────────────────────────────────
 const val malsyncAPI = "https://api.malsync.moe"
+const val WYZIESubsAPI = "https://sub.wyzie.io"
 const val CC_COOKIE = BuildConfig.CC_COOKIE
 const val videasyAPI = "https://api.videasy.net"
 const val vidlinkAPI = "https://vidlink.pro"
