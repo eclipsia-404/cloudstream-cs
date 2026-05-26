@@ -1,4 +1,4 @@
-package com.megix.settings
+package com.eclipsia.settings
 
 import android.content.Context
 import android.graphics.Color
