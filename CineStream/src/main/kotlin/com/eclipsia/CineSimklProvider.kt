@@ -1,4 +1,4 @@
-package com.megix
+package com.eclipsia
 
 
 // Cloudstream Core & Utils
@@ -29,8 +29,8 @@ import kotlinx.coroutines.coroutineScope
 // JSON Parsing
 import org.json.JSONObject
 
-import com.megix.CineStreamExtractors.invokeAllSources
-import com.megix.CineStreamExtractors.invokeAllAnimeSources
+import com.eclipsia.CineStreamExtractors.invokeAllSources
+import com.eclipsia.CineStreamExtractors.invokeAllAnimeSources
 
 class CineSimklProvider: MainAPI() {
     override var name = "CineSimkl"
@@ -63,14 +63,6 @@ class CineSimklProvider: MainAPI() {
     override val mainPage = mainPageOf(
         "/discover/trending/movies/today_500.json" to "Trending Movies Today",
         "/discover/trending/tv/today_500.json" to "Trending Shows Today",
-        "/discover/trending/anime/today_500.json" to "Trending Anime Today",
-        "/anime/airing?today?sort=rank" to "Airing Anime Today",
-        "/tv/genres/all/all-types/kr/all-networks/this-year/popular-today?limit=$mediaLimit" to "Trending Korean Shows",
-        "/discover/dvd/releases_500.json" to "Trending Movie DVD Releases",
-        "/discover/trending/movies/month_500.json" to "Trending Movie This Month",
-        "/discover/trending/tv/month_500.json" to "Trending Series This Month",
-        "/discover/trending/month_500.json" to "Trending This Month",
-        "/discover/trending/anime/month_500.json" to "Trending Anime This Month",
         // "/movies/genres/all/all-types/all-countries/this-year/rank?limit=$mediaLimit" to "Top Rated Movies This Year",
         // "/tv/genres/all/all-types/all-countries/all-networks/this-year/rank?limit=$mediaLimit" to "Top Rated Shows This Year",
         // "/tv/genres/all/all-types/all-countries/netflix/all-years/popular-today?limit=$mediaLimit" to "Trending Netflix Shows",
@@ -80,10 +72,7 @@ class CineSimklProvider: MainAPI() {
         // "/movies/genres/all/all-types/all-countries/this-year/revenue?limit=$mediaLimit" to "Box Office Hits This Year",
         "/movies/genres/all/all-types/all-countries/all-years/rank?limit=$mediaLimit" to "Top Rated Movies",
         "/tv/genres/all/all-types/all-countries/all-networks/all-years/rank?limit=$mediaLimit" to "Top Rated Shows",
-        "/anime/genres/all/all-types/all-countries/all-networks/all-years/rank?limit=$mediaLimit" to "Top Rated Anime",
         "/tv/genres/all/all-types/kr/all-networks/all-years/rank?limit=$mediaLimit" to "Top Rated Korean Shows",
-        // "/movies/genres/all/all-countries/all-years/most-anticipated?limit=$mediaLimit" to "Most Anticipated Movies",
-        "/anime/premieres/soon?type=all&limit=$mediaLimit" to "Upcoming Anime",
         "Personal" to "Personal",
     )
 
@@ -398,7 +387,7 @@ class CineSimklProvider: MainAPI() {
                     this.season = it.season
                     this.episode = it.episode
                     this.description = it.description
-                    this.posterUrl = getPosterUrl(it.img, "episode") ?: "https://github.com/SaurabhKaperwan/Utils/raw/refs/heads/main/missing_thumbnail.png"
+                    this.posterUrl = getPosterUrl(it.img, "episode") ?: "https://codeberg.org/eclipsia-404/eclipsia/raw/branch/main/missing_thumbnail.png"
                     addDate(it.date, "yyyy-MM-dd'T'HH:mm:ss")
                 }
             }
