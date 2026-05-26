@@ -6,7 +6,6 @@ android {
         val properties = Properties()
         properties.load(project.rootProject.file("local.properties").inputStream())
         android.buildFeatures.buildConfig=true
-        buildConfigField("String", "SIMKL_API", "\"${properties.getProperty("SIMKL_API")}\"")
         buildConfigField("String", "TMDB_KEY", "\"${properties.getProperty("TMDB_KEY")}\"")
         buildConfigField("String", "CC_COOKIE", "\"${properties.getProperty("CC_COOKIE")}\"")
     }
