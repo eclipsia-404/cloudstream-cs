@@ -30,14 +30,6 @@ data class AllLoadLinksData(
     val imdbYear : Int? = null,
 )
 
-//AIO
-data class ExtractedMediaData(
-    val cast: List<ActorData>?,
-    val poster: String?,
-    val background: String?,
-    val logo: String?
-)
-
 // Vidfast
 data class VidfastServers(
     @param:JsonProperty("name") val name: String?,
