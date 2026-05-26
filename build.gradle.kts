@@ -35,12 +35,12 @@ subprojects {
     apply(plugin = "com.lagradost.cloudstream3.gradle")
 
     cloudstream {
-        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/SaurabhKaperwan/CSX")
-        authors = listOf("megix")
+        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/eclipsia-404/cloudstream-cs")
+        authors = listOf("eclipsia")
     }
 
     android {
-        namespace = "com.megix"
+        namespace = "com.eclipsia"
         compileSdk = 35
         defaultConfig {
             minSdk = 21
