@@ -14,7 +14,7 @@ android {
 
 cloudstream {
     language = "en"
-    description = "One stop solution for Movies, Series, Anime, AsianDrama and Torrents"
+    description = "A Curated Collection of Providers for Reliability and Performance"
     authors = listOf("eclipsia")
     status = 1
     tvTypes = listOf(
